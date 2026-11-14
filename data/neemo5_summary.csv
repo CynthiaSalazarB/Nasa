@@ -1,0 +1,5 @@
+metric,unit,pre_mission_mean,pre_mission_sd,in_habitat_mean,in_habitat_sd,n,note
+average_illumination,lux,950,440,12,5,4,values read from figure NEEMO_ACTIWATCH__1820836319 (approximate)
+sleep_duration,hours,7.7,1.0,7.5,0.6,4,values read from figure NEEMO_ACTIWATCH__1820735945 (approximate)
+sleep_efficiency,percent,92,3,92,4,4,values read from figure NEEMO_ACTIWATCH__1820813971 (approximate)
+sleep_latency,minutes,5.7,2.6,14.8,7.5,4,values read from figure NEEMO_ACTIWATCH__1820759835 (approximate; increase not significant per NLSP)
