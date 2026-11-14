@@ -1,0 +1,8 @@
+SOURCE: https://ntrs.nasa.gov/api/citations/20160005080/downloads/20160005080.pdf
+
+Setting	Candela	≈ Lux (mid-module)
+Phase-shift default	420 cd	~500 lux
+General max	340 cd	~410 lux
+General default	210 cd	~250 lux
+Pre-sleep max	130 cd	~155 lux
+Pre-sleep default	90 cd	~105 lux (not on the chart; I extrapolated it)
