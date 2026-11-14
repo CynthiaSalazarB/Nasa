@@ -60,6 +60,7 @@ Sleep stages/REM (needs PSG), sex differences (no usable data this weekend), in-
 medication advice (flight surgeon only, never the app), food as treatment (rationed menus, weak evidence), radiation.
 
 ## 4. What we track and what we compute
+How the data moves through the phases and why each dataset is used: [DATA_FLOW.md](DATA_FLOW.md).
 
 | Signal | Source in demo | Used for |
 |---|---|---|
