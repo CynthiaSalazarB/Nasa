@@ -74,7 +74,75 @@ medication advice (flight surgeon only, never the app), food as treatment (ratio
 | Cabin CO2, temp, humidity | **OSDR Environmental Data App (real NASA)** | context flags that hurt sleep (NASA sleep DAG lists environment) |
 | Baseline: chronotype (MEQ), sleep pattern, saliva melatonin/cortisol | **MMASH** (22 people) | starting personal profile |
 
-Not tracked: heart rate/HRV (in MMASH and Bio-Monitor, but it adds nothing to the circadian calc; mention only), REM, core temp.
+Display only (health indicators on the dashboard, they do not drive suggestions): heart rate (sleeping HR as a sleep
+quality cue), breathing rate (synthetic from published normal ranges, labeled synthetic).
+Not tracked: HRV, REM, core temp.
+
+### Astronaut inputs
+
+**Passive (zero effort)**
+- Actiwatch: activity, light exposure, sleep start and end
+- Crew timeline (set by ground): tasks, critical windows, sleep slot, scheduled exercise
+- Cabin sensors: CO2, temperature, humidity
+
+**Active (on check-ins NASA already runs, target 2 min or less per day)**
+
+| When | Input | Format |
+|---|---|---|
+| Morning check-in | Sleep quality | 1 to 5 |
+| Morning check-in | Sleepiness (KSS) | 1 to 9 |
+| Evening check-in | Mood | 1 to 5 |
+| After a nudge | Better / same / worse | 1 tap |
+| After a nudge | Reason | optional text or voice |
+| Any time | "I feel groggy" | button, triggers a nudge |
+| Any time | Caffeine | 1 tap, logs the time |
+| When already scheduled | Reaction test (PVT) | 3 min |
+
+**Once, before the mission (training phase):** chronotype questionnaire (MEQ), baseline saliva melatonin and
+cortisol, baseline weeks of wearable data.
+
+**Not an input:** heart rate and breathing are sensor data, not something the astronaut types; food and medication
+are never asked for or suggested.
+
+### Datasets
+
+**Real NASA data**
+- [OSDR Environmental Data Application](https://visualization.osdr.nasa.gov/eda/): ISS cabin temperature, humidity,
+  CO2. Download from the Data Tables tab. Core.
+
+**NASA models, thresholds and study numbers (calibration, not downloads)**
+- [NASA sleep risk page](https://www.nasa.gov/directorates/esdmd/hhp/risk-of-performance-decrements-and-adverse-health-outcomes-resulting-from-sleep-loss-circadian-desynchronization-and-work-overload/):
+  [causal graph code (TXT)](https://www.nasa.gov/wp-content/uploads/2025/09/sleep-risk-dag-code-sa-07566.txt),
+  [narrative (PDF)](https://www.nasa.gov/wp-content/uploads/2025/09/sleep-risk-dag-narrative-sa-07566.pdf),
+  [evidence report](https://humanresearchroadmap.nasa.gov/evidence/reports/Sleep.pdf). Engine structure.
+- [ISS Solid State Lighting Assembly](https://ntrs.nasa.gov/citations/20160005080): the 3 light modes.
+- [Reaction Self Test on ISS](https://ntrs.nasa.gov/api/citations/20090029851/downloads/20090029851.pdf): thresholds and test design.
+- [Barger et al. 2014](https://pmc.ncbi.nlm.nih.gov/articles/PMC4188436): in-flight sleep durations, light levels.
+- [Jones et al. 2022](https://pmc.ncbi.nlm.nih.gov/articles/PMC8919197): sleep under 6 h vs reaction speed and stress.
+- [Flynn-Evans et al. 2016](https://doi.org/10.1038/npjmgrav.2015.19): misalignment rates, sleep medication use.
+- [Flynn-Evans, Rueger et al. 2023](https://doi.org/10.1038/s41526-023-00332-w): light and caffeine countermeasures.
+- NASA Life Sciences Portal studies (cited evidence only, raw data needs a data request):
+  [Intermittent Bright Light](https://nlsp.nasa.gov/explore/data/details/21ca4836-9f33-55f1-8ae1-cefa6690efdb?dataType=EXPERIMENTS),
+  [Sleeping Short](https://nlsp.nasa.gov/explore/data/details/59878a50-2b29-53e5-b2ba-790bd3fb61b2?dataType=EXPERIMENTS),
+  [Melatonin Trial](https://nlsp.nasa.gov/explore/data/details/501af641-df67-5745-ad83-fc5f9b422c9c?dataType=EXPERIMENTS),
+  [Sleep Dynamics in Simulated Space Station](https://nlsp.nasa.gov/explore/data/details/caf12d45-8bd3-5e0e-badd-e9473dd7cb21?dataType=EXPERIMENTS),
+  [Actigraphy in Aquarius](https://nlsp.nasa.gov/explore/data/details/62a350af-45b3-58f7-badb-7fcf7f6772a2?dataType=EXPERIMENTS).
+
+**Open Earth datasets (download today)**
+
+| Dataset | Heart rate | Sleep | Breathing | Other | License | Use |
+|---|---|---|---|---|---|---|
+| [MMASH](https://physionet.org/content/mmash/) (22 people, 24 h) | beat-to-beat | actigraphy timing, efficiency | no | melatonin, cortisol, chronotype | ODbL | baseline profile. Core |
+| [Walch sleep-accel](https://physionet.org/content/sleep-accel/) (31 people) | Apple Watch | sleep-lab stages | no | wrist motion | ODC-By | sleep HR, sleep detection |
+| [Fitbit Fitness Tracker](https://www.kaggle.com/datasets/arashnic/fitbit) (~30 people, 1 to 2 months) | per minute | per minute | no | steps | CC0 (Kaggle) | night-to-night variation |
+| [Sleep-EDF Expanded](https://physionet.org/content/sleep-edfx/) (197 nights) | no | full sleep-lab | some records | body temp in some | ODC-By | breathing, optional |
+| [BIDSleep](https://physionet.org/content/bidsleep-dataset/) | Apple Watch | multi-night | no | | check license | optional |
+| [Xiang et al. 2024](https://doi.org/10.1038/s41597-024-03268-2) | | | | PVT, KSS after sleep loss | check license | reaction-test calibration, optional |
+
+**Not available this weekend:** [LifeSnaps](https://zenodo.org/records/6832186) (Zenodo, restricted),
+[DREAMT](https://physionet.org/content/dreamt/) (credentialed access).
+
+**Model:** [arcascope/circadian](https://github.com/Arcascope/circadian) (MIT).
 
 **How the health and the circadian rhythm are calculated**
 1. **Circadian phase:** `arcascope/circadian` (MIT, `pip install circadian`), Forger99 or Hannay19 driven by light/activity,
