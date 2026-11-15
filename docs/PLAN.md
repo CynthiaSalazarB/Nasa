@@ -2,8 +2,8 @@
 
 ## Context
 Challenge: "Create Health Monitoring Software for Astronauts on Space Missions". Team of 5. On Nov 15 the team
-pivoted from a broad circadian copilot to **sleep only**, built on **ORBITAL**, the prototype in
-[nora-raad/nasa_hackathon](https://github.com/nora-raad/nasa_hackathon) (deployed with GitHub Pages).
+pivoted from a broad circadian copilot to **sleep only**, built on **ORBITAL**, the prototype Nora started in
+nora-raad/nasa_hackathon and now in this repo under `ORBITAL/` (history kept).
 Judged on Impact, Creativity, Validity, Relevance (NASA data integral), Presentation.
 
 ## 1. One-line product
@@ -98,8 +98,8 @@ All results are labeled as model outputs, not clinical outcomes.
 | Pitch + submission | AliveDragon | story around one astronaut, slides, demo video, project page |
 
 ## 8. Workflow
-- **Product code lives in ORBITAL** (nora-raad/nasa_hackathon), since it already deploys. This repo keeps the plan
-  and the data files.
+- **Everything lives in this repo:** app in `ORBITAL/`, plan in `docs/`, raw data in `data/`. Pages deploys
+  `ORBITAL/dist` from main once Pages is enabled in this repo's settings (Source: GitHub Actions).
 - Branch per feature, small PRs, one teammate review, merge often. Pages redeploys on every merge to main.
 - Checkpoints (EST, Nov 15): suggested schedule working; real Actiwatch replay loads; check-in saved; results
   numbers in; demo video recorded; submit.
@@ -116,7 +116,7 @@ All results are labeled as model outputs, not clinical outcomes.
 1. Agree on the pivot and this plan as a team.
 2. Update `DATA_FLOW.md` and `SYSTEM_DESIGN.md` to the ORBITAL scope (both still describe the broad copilot).
 3. Clean the data folder: keep the Actiwatch CSVs and `light.txt` with a source note; drop the MATLAB study bundle.
-4. Turn each "Building" item into a GitHub Issue in the ORBITAL repo.
+4. Turn each "Building" item into a GitHub Issue in this repo.
 
 ## 11. Verification
 - ORBITAL runs locally and on Pages after each merge.
