@@ -1,6 +1,6 @@
 // Suggested schedule: search small changes to the plan and keep the one whose night-3 DLMO
 // lands closest to the target, with the fewest changes.
-import { DAY, SAMPLES_PER_DAY, clock, compare, estimateState, forecastDlmo, wrap } from './model.mjs';
+import { DAY, DEFAULT_PARAMS, SAMPLES_PER_DAY, clock, compare, estimateState, forecastDlmo, wrap } from './model.mjs';
 
 // Melatonin onset usually comes about 2 h before habitual sleep. Verify the source before the slides.
 export const ALIGN_GAP = 120;
@@ -18,13 +18,13 @@ export function alignmentError(dlmo, bedtime) {
 
 // `mission` is the sleep slot set by mission planners; nudges are measured from it, so applying a
 // suggestion and asking again gives the same answer.
-export function suggest(history, plan, mission = plan) {
+export function suggest(history, plan, mission = plan, params = DEFAULT_PARAMS) {
   if (history.length < SAMPLES_PER_DAY) return null;
-  const state = estimateState(history);
-  const night3 = options => forecastDlmo(state, options)[2];
+  const state = estimateState(history, params);
+  const night3 = options => forecastDlmo(state, options, params)[2];
   const morning = plan.morning || 0;
   // Where the clock goes if the astronaut keeps their current light (last replay day repeated).
-  const currentError = alignmentError(compare(history, plan)[2]?.current, mission.bedtime);
+  const currentError = alignmentError(compare(history, plan, params)[2]?.current, mission.bedtime);
   const planError = alignmentError(night3(plan), plan.bedtime);
   let best = null;
   for (const shift of SHIFTS) {

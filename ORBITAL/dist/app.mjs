@@ -1,6 +1,7 @@
-import { ANCHOR, DAY, SAMPLES_PER_DAY, STEP, clock, compare, wrap } from './model.mjs';
+import { ANCHOR, DAY, DEFAULT_PARAMS, SAMPLES_PER_DAY, STEP, clock, compare, wrap } from './model.mjs';
 import { drawPhase, drawTelemetry, drawUtmb } from './charts.mjs';
 import { explain, suggest } from './suggest.mjs';
+import { fitParams } from './fit.mjs';
 
 const el = id => document.getElementById(id);
 const set = (id, value) => { el(id).textContent = value; };
@@ -33,6 +34,8 @@ let options = { bedtime: 1380, wake: 420, lead: 120, lux: 30, morning: 0 };
 // Sleep slot set by mission planners. Only a manual bed/wake edit changes it; Apply does not.
 let mission = { bedtime: 1380, wake: 420 };
 let suggestion = null;
+let personalFit = null; // result of fitParams on the replay
+const activeParams = () => (personalFit && el('use-fit').checked ? personalFit.params : DEFAULT_PARAMS);
 
 function duration(minutes) {
   const h = Math.floor(minutes / 60);
@@ -122,7 +125,7 @@ function toggleReplay() {
 
 function renderForecast() {
   if (!telemetry.length) return;
-  forecast = compare(telemetry.map(s => s.lux), options);
+  forecast = compare(telemetry.map(s => s.lux), options, activeParams());
   const rows = forecast.map((night, index) => {
     const row = document.createElement('tr');
     const shift = night.current !== null && night.preview !== null ? delta(night.preview, night.current) : NaN;
@@ -169,8 +172,20 @@ function updatePlan() {
   renderSuggestion();
 }
 
+function renderFit() {
+  if (!personalFit) {
+    set('fit-summary', 'Personal fit needs at least 2 nights with a sleep onset; using the average clock.');
+    el('use-fit').disabled = true;
+    return;
+  }
+  const { params, rmse, nights } = personalFit;
+  const offset = params.offset === 0 ? 'no start offset' : 'start offset ' + duration(Math.abs(params.offset)) + (params.offset > 0 ? ' later' : ' earlier');
+  set('fit-summary', 'Fitted on ' + nights.length + ' nights: natural day ' + params.tau.toFixed(1) + ' h (average 24.2 h), '
+    + offset + '. Predicted sleep onsets match the record within ' + Math.round(rmse) + ' min on average.');
+}
+
 function renderSuggestion() {
-  suggestion = suggest(telemetry.map(s => s.lux), options, mission);
+  suggestion = suggest(telemetry.map(s => s.lux), options, mission, activeParams());
   if (!suggestion) return;
   const { status, steps, outcome } = explain(suggestion, options, mission);
   set('suggestion-status', status);
@@ -265,6 +280,8 @@ async function initialize() {
   utmb = utmbRows;
   dso = phaseRows.filter(row => row.marker === 'urinary_melatonin_sulfate');
   sleepNights = summarizeSleep(telemetry);
+  personalFit = fitParams(telemetry.map(s => s.lux), telemetry.map(s => s.asleep));
+  renderFit();
 
   for (let day = 0; day < 7; day++) {
     const button = document.createElement('button');
@@ -288,6 +305,7 @@ async function initialize() {
   for (const id of ['bedtime', 'wake']) el(id).addEventListener('change', setMissionSlot);
   for (const id of ['lead', 'dim-lux', 'morning']) el(id).addEventListener('change', updatePlan);
   el('apply-suggestion').addEventListener('click', applySuggestion);
+  el('use-fit').addEventListener('change', () => { renderForecast(); renderSuggestion(); });
   for (const button of document.querySelectorAll('[data-fixture]')) {
     button.addEventListener('click', () => fixture(button.dataset.fixture));
   }
