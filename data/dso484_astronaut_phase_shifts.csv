@@ -1,0 +1,10 @@
+# Source: NASA LSDA DSO 484 (JMDSO_484_5.xls). Whitson PA, Putcha L, Chen YM, Baker E. J Pineal Res 1995;18(3):141-7. Acrophases = hours after midnight; delays = hours. Values >30 in source had a missing decimal point and were divided by 10 (verified against the delay column).
+protocol,subject,melatonin_saliva_before,melatonin_saliva_after,melatonin_saliva_delay,melatonin_sulfate_urine_before,melatonin_sulfate_urine_after,melatonin_sulfate_urine_delay,cortisol_saliva_before,cortisol_saliva_after,cortisol_saliva_delay,cortisol_urine_before,cortisol_urine_after,cortisol_urine_delay,note
+A ,1,2.8,17.3,13.5,3.3,18.9,15.6,6.1,17.8,11.7,8.5,21.8,13.3,
+A ,2,5.2,16.8,11.6,3.5,15.8,12.3,6.8,19.7,12.9,8.0,23.0,15.0,
+A ,3,4.3,17.8,13.5,3.1,16.9,13.8,7.1,21.3,14.2,7.5,21.0,13.5,
+B ,4,3.9,15.4,10.4,4.7,13.2,8.5,6.5,18.9,12.5,8.3,16.3,8.0,
+B ,5,5.8,,,2.1,13.3,11.2,5.8,18.4,10.1,7.6,14.9,7.3,
+B ,6,6.8,,,3.6,13.6,10.0,7.5,16.7,9.2,8.2,15.4,7.2,
+C ,7,4.5,15.0,10.5,4.2,14.4,10.2,7.4,14.5,7.1,9.8,18.3,8.5,
+C ,8,,,,2.1,5.3,3.2,6.3,19.2,12.9,7.6,12.5,4.9,
