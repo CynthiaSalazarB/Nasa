@@ -33,15 +33,19 @@ export function step(state, lux) {
   return state.map((value, i) => value + (dt / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
 }
 
-export function scheduleLux(time, bedtime, wake, lead, dimLux) {
+// Phase-shift (Alertness) fixture default, about 500 lux mid-module (SSLA report, NTRS 20160005080; data/light.txt).
+export const MORNING_LUX = 500;
+
+export function scheduleLux(time, bedtime, wake, lead, dimLux, morning = 0) {
   const sinceWake = wrap(time - wake);
   const awakeMinutes = wrap(bedtime - wake);
   if (sinceWake >= awakeMinutes) return 0;
+  if (sinceWake < morning) return MORNING_LUX;
   return sinceWake >= awakeMinutes - lead ? dimLux : 300;
 }
 
 export function forecastLux(index, options) {
-  return scheduleLux(wrap(ANCHOR + index * STEP), options.bedtime, options.wake, options.lead, options.lux);
+  return scheduleLux(wrap(ANCHOR + index * STEP), options.bedtime, options.wake, options.lead, options.lux, options.morning);
 }
 
 function simulatePhase(initial, lightAtStep) {
@@ -65,8 +69,8 @@ function simulatePhase(initial, lightAtStep) {
   return nights;
 }
 
-export function compare(history, options) {
-  if (history.length < SAMPLES_PER_DAY) return [];
+// Clock state at the end of the replay, the shared start point for every forecast.
+export function estimateState(history) {
   const usual = history.slice(0, SAMPLES_PER_DAY);
   const currentDay = history.slice(-SAMPLES_PER_DAY);
   let state = DEFAULT_STATE;
@@ -75,7 +79,18 @@ export function compare(history, options) {
     state = step(state, usual[i % SAMPLES_PER_DAY]);
   }
   for (let i = 1; i < history.length; i++) state = step(state, history[i]);
-  state = step(state, currentDay[0]);
+  return step(state, currentDay[0]);
+}
+
+// DLMO (minutes, same scale as compare()) for the next three nights under a schedule.
+export function forecastDlmo(state, options) {
+  return simulatePhase(state, i => forecastLux(i, options)).map((value, i) => value === null ? null : value - i * DAY);
+}
+
+export function compare(history, options) {
+  if (history.length < SAMPLES_PER_DAY) return [];
+  const currentDay = history.slice(-SAMPLES_PER_DAY);
+  const state = estimateState(history);
   const current = simulatePhase(state, i => currentDay[i % SAMPLES_PER_DAY]);
   const preview = simulatePhase(state, i => forecastLux(i, options));
   return current.map((value, i) => ({

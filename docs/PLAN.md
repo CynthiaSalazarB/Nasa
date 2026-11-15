@@ -20,7 +20,7 @@ wake time and lighting schedule will put their sleep back in sync with the missi
   set 7 h before the modeled core body temperature minimum).
 - **Research data tab:** UTMB bed-rest actigraphy (69 nights: sleep minutes, latency, efficiency) and NASA DSO 484
   (melatonin and cortisol peak times before and after a prelaunch sleep-shift + bright-light protocol, 8 subjects).
-- **Stack:** plain HTML + JavaScript modules, no build step, `python -m http.server 8000 --directory dist`,
+- **Stack:** plain HTML + JavaScript modules, no build step, `python ORBITAL/serve.py` (sets the .mjs type Windows needs),
   deployed by a GitHub Actions Pages workflow.
 
 Known limits (from its README): one synthetic astronaut, illustrative lux values, the model is not fitted to the

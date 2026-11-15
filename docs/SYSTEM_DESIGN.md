@@ -17,7 +17,7 @@ Nasa/
 Run locally (Python only, no install, no build), from the repo root:
 
 ```bash
-python -m http.server 8000 --directory ORBITAL/dist
+python ORBITAL/serve.py
 ```
 
 Then open http://localhost:8000. Opening `index.html` directly does not work; the data files load over HTTP.

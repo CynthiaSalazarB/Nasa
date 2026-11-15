@@ -1,5 +1,6 @@
 import { ANCHOR, DAY, SAMPLES_PER_DAY, STEP, clock, compare, wrap } from './model.mjs';
 import { drawPhase, drawTelemetry, drawUtmb } from './charts.mjs';
+import { explain, suggest } from './suggest.mjs';
 
 const el = id => document.getElementById(id);
 const set = (id, value) => { el(id).textContent = value; };
@@ -28,7 +29,10 @@ let dso = [];
 let forecast = [];
 let playIndex = 0;
 let timer = null;
-let options = { bedtime: 1380, wake: 420, lead: 120, lux: 30 };
+let options = { bedtime: 1380, wake: 420, lead: 120, lux: 30, morning: 0 };
+// Sleep slot set by mission planners. Only a manual bed/wake edit changes it; Apply does not.
+let mission = { bedtime: 1380, wake: 420 };
+let suggestion = null;
 
 function duration(minutes) {
   const h = Math.floor(minutes / 60);
@@ -146,21 +150,54 @@ function updatePlan() {
   const wake = timeInput('wake');
   const lead = Number(value('lead'));
   const lux = Number(value('dim-lux'));
+  const morning = Number(value('morning'));
   const awake = wrap(bedtime - wake);
   const error = el('input-error');
-  if (!Number.isFinite(awake) || awake <= lead) {
-    error.textContent = 'Choose distinct bed and wake times with an awake window longer than the dimming lead.';
+  if (!Number.isFinite(awake) || awake <= lead + morning) {
+    error.textContent = 'Choose distinct bed and wake times with an awake window longer than the dimming lead and morning light.';
     error.hidden = false;
     return;
   }
   error.hidden = true;
-  options = { bedtime, wake, lead, lux };
+  options = { bedtime, wake, lead, lux, morning };
   set('target-header', clock(bedtime) + ' → ' + clock(wake));
   set('general-start', clock(wake));
   set('dim-start', clock(bedtime - lead));
   set('off-start', clock(bedtime));
   renderReplay();
   renderForecast();
+  renderSuggestion();
+}
+
+function renderSuggestion() {
+  suggestion = suggest(telemetry.map(s => s.lux), options, mission);
+  if (!suggestion) return;
+  const { status, steps, outcome } = explain(suggestion, options, mission);
+  set('suggestion-status', status);
+  el('suggestion-steps').replaceChildren(...steps.map(text => {
+    const item = document.createElement('li');
+    item.textContent = text;
+    return item;
+  }));
+  set('suggestion-outcome', outcome);
+  el('apply-suggestion').disabled = !suggestion.changes;
+}
+
+function applySuggestion() {
+  if (!suggestion || !suggestion.changes) return;
+  const { bedtime, wake, lead, morning } = suggestion.options;
+  el('bedtime').value = clock(bedtime);
+  el('wake').value = clock(wake);
+  el('lead').value = String(lead);
+  el('morning').value = String(morning);
+  updatePlan();
+}
+
+function setMissionSlot() {
+  const bedtime = timeInput('bedtime');
+  const wake = timeInput('wake');
+  if (Number.isFinite(bedtime) && Number.isFinite(wake)) mission = { bedtime, wake };
+  updatePlan();
 }
 
 function fixture(mode) {
@@ -248,7 +285,9 @@ async function initialize() {
     stopReplay();
     setPlayIndex(Number(value('scrubber')));
   });
-  for (const id of ['bedtime', 'wake', 'lead', 'dim-lux']) el(id).addEventListener('change', updatePlan);
+  for (const id of ['bedtime', 'wake']) el(id).addEventListener('change', setMissionSlot);
+  for (const id of ['lead', 'dim-lux', 'morning']) el(id).addEventListener('change', updatePlan);
+  el('apply-suggestion').addEventListener('click', applySuggestion);
   for (const button of document.querySelectorAll('[data-fixture]')) {
     button.addEventListener('click', () => fixture(button.dataset.fixture));
   }

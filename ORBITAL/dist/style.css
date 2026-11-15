@@ -112,3 +112,8 @@ footer { display:flex; justify-content:space-between; gap: 12px; color:var(--mut
   .day-tabs button { padding: 4px 6px; }
   footer { flex-wrap:wrap; }
 }
+.suggestion { margin-top: 15px; }
+.suggestion-status { font-size: .9rem; }
+.suggestion-steps { margin: 8px 0 0 18px; display: grid; gap: 4px; font-size: .85rem; }
+.suggestion-outcome { color: var(--mint); margin: 8px 0 6px; font-size: .85rem; }
+.button:disabled { opacity: .5; cursor: default; }

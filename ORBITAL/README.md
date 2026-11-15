@@ -7,7 +7,7 @@ ORBITAL is a browser-based NASA Space Apps prototype for replaying sleep telemet
 From this directory, run:
 
 ```bash
-python -m http.server 8000 --directory dist
+python serve.py
 ```
 
 Open <http://localhost:8000>. The application has no package installation or build step.
