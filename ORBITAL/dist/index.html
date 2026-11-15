@@ -21,14 +21,35 @@
   <main>
     <section id="console">
       <div class="hero">
-        <div><div class="eyebrow">MISSION HEALTH / AST-01</div><h1>Sleep &amp; circadian timing</h1><p>Review sleep in the mission replay and compare how a different cabin lighting schedule could shift the body clock.</p></div>
+        <div><div class="eyebrow" id="crew-eyebrow">FLIGHT SURGEON REVIEW</div><h1>Sleep &amp; circadian timing</h1><p>Check the model&rsquo;s recommendation and the evidence beside it, then review the sleep and light record below.</p></div>
         <div class="mission-tag"><span>MISSION SLEEP TARGET</span><strong id="target-header">23:00 → 07:00</strong><small>Simulated mission clock · UTC</small></div>
+      </div>
+      <div id="crew-tabs" class="crew-tabs" role="group" aria-label="Crew member"></div>
+      <div class="decision">
+        <section class="panel suggestion" aria-live="polite" aria-labelledby="suggestion-title">
+          <div class="eyebrow" id="suggestion-title">RECOMMENDATION TO SEND</div>
+          <p id="suggestion-status" class="suggestion-status">&mdash;</p>
+          <ol id="suggestion-steps" class="suggestion-steps"></ol>
+          <p id="suggestion-outcome" class="suggestion-outcome"></p>
+          <div class="suggestion-actions">
+            <button id="apply-suggestion" class="button primary" type="button">Preview in forecast</button>
+            <label class="fit-toggle" for="use-fit"><input id="use-fit" type="checkbox" checked> Use personal fit</label>
+          </div>
+          <p id="fit-summary" class="note fit-summary">Fitting the clock to the replay&hellip;</p>
+          <small class="note">Model estimate from light history, not a measurement. Aligned means melatonin onset about 2 hours before bedtime.</small>
+        </section>
+      <section class="panel forecast">
+        <div class="panel-heading"><div><h2>Why: six-month view</h2><p>Last 3 months of sleep and the modeled melatonin onset (DLMO), then 3 months of forecast</p></div><div class="forecast-key"><span><i class="dot violet"></i>Sleep onset (record)</span><span><i class="swatch muted"></i>Modeled DLMO (past)</span><span><i class="swatch amber"></i>Current lighting</span><span><i class="swatch mint"></i>Plan</span><span><i class="swatch dashed"></i>Bedtime</span><span><i class="swatch dashed teal"></i>Target DLMO (2 h before)</span></div></div>
+        <div class="forecast-chart-wrap"><canvas id="phase-chart" class="phase-chart" role="img" aria-label="Modeled evening phase for two schedules over three forecast nights"></canvas></div>
+        <div class="table-overflow"><table aria-label="Forecast phase times"><thead><tr><th>Forecast</th><th>Current DLMO</th><th>Plan DLMO</th><th>Modeled change</th></tr></thead><tbody id="forecast-rows"></tbody></table></div>
+        <p class="note">Forecasts start from the clock state after the last 3 weeks of the record. Current lighting repeats the last recorded day. The table samples the 90 forecast nights.</p>
+      </section>
       </div>
       <div class="metrics" aria-live="polite">
         <article class="metric"><span>Last completed sleep</span><strong id="sleep-duration">—</strong><small id="sleep-target-label">8 h scheduled</small></article>
         <article class="metric"><span>Sleep onset</span><strong id="sleep-onset">—</strong><small id="sleep-night">Mission replay</small></article>
         <article class="metric"><span>Onset vs. target</span><strong id="sleep-delay">—</strong><small id="sleep-delay-label">Relative to target bedtime</small></article>
-        <article class="metric phase-metric"><span>Modeled shift · night 3</span><strong id="phase-delta">—</strong><small>Preview compared with current light</small></article>
+        <article class="metric phase-metric"><span>Modeled shift · 3 months</span><strong id="phase-delta">—</strong><small>Preview compared with current light</small></article>
       </div>
       <div class="mission-grid">
         <section class="panel telemetry">
@@ -38,12 +59,12 @@
           <div class="telemetry-legend"><span><i class="swatch amber"></i>Eye-level lux</span><span><i class="swatch violet"></i>Sleep</span><span><i class="swatch dashed"></i>Target window</span></div>
           <div class="playhead">
             <label for="scrubber">Replay time <output id="replay-time" for="scrubber"></output></label>
-            <input id="scrubber" type="range" min="0" max="2015" value="2015" aria-label="Mission replay time">
+            <input id="scrubber" type="range" min="0" max="25919" value="25919" aria-label="Mission replay time">
             <div class="live-readout"><span id="live-lux">— lux</span><span id="live-state">—</span></div>
           </div>
         </section>
         <section class="panel lighting">
-          <div class="panel-heading"><div><h2>Lighting preview</h2><p>Plan around the target sleep window</p></div><span class="mode-badge">FORGER99</span></div>
+          <div class="panel-heading"><div><h2>Lighting plan</h2><p>Adjust by hand; the forecast shows the result</p></div><span class="mode-badge">FORGER99</span></div>
           <div class="field-pair">
             <label for="bedtime">Target bedtime<input id="bedtime" type="time" value="23:00" step="300"></label>
             <label for="wake">Target wake<input id="wake" type="time" value="07:00" step="300"></label>
@@ -66,21 +87,6 @@
           <small class="note">ISS fixture settings describe appearance. The model uses simulated eye-level lux.</small>
         </section>
       </div>
-      <section class="panel suggestion" aria-live="polite">
-        <div class="panel-heading"><div><h2>Suggested plan</h2><p>Best lighting and sleep timing the model finds inside the mission sleep slot</p></div><button id="apply-suggestion" class="button" type="button">Apply</button></div>
-        <label class="fit-toggle" for="use-fit"><input id="use-fit" type="checkbox" checked> Use personal fit</label>
-        <p id="fit-summary" class="note fit-summary">Fitting the clock to the replay…</p>
-        <p id="suggestion-status" class="suggestion-status">—</p>
-        <ul id="suggestion-steps" class="suggestion-steps"></ul>
-        <p id="suggestion-outcome" class="suggestion-outcome"></p>
-        <small class="note">Aligned means melatonin onset about 2 hours before bedtime. The model estimates it from light history; it is not a measurement.</small>
-      </section>
-      <section class="panel forecast">
-        <div class="panel-heading"><div><h2>Three-night circadian forecast</h2><p>Estimated dim-light melatonin onset (DLMO), a marker of biological evening</p></div><div class="forecast-key"><span><i class="swatch amber"></i>Current lighting</span><span><i class="swatch mint"></i>Preview schedule</span><span><i class="swatch dashed"></i>Target bedtime</span></div></div>
-        <div class="forecast-chart-wrap"><canvas id="phase-chart" class="phase-chart" role="img" aria-label="Modeled evening phase for two schedules over three forecast nights"></canvas></div>
-        <div class="table-overflow"><table aria-label="Forecast phase times"><thead><tr><th>Forecast</th><th>Current DLMO</th><th>Preview DLMO</th><th>Modeled change</th></tr></thead><tbody id="forecast-rows"></tbody></table></div>
-        <p class="note">Both runs start from the same state after the seven-day replay. Current lighting repeats its last 24 hours. The forecast estimates circadian timing using simulated light exposure.</p>
-      </section>
     </section>
     <section id="evidence" hidden>
       <div class="hero"><div><div class="eyebrow">SOURCE DATA</div><h1>Research behind ORBITAL</h1><p>Explore the measured sleep and circadian observations behind the simulation.</p></div></div>

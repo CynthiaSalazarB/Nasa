@@ -66,16 +66,16 @@ function dlmoByNight(rhythm, nightCount) {
   return nights;
 }
 
-function simulatePhase(initial, lightAtStep, tau) {
+function simulatePhase(initial, lightAtStep, tau, nights = 3) {
   let state = initial;
   const rhythm = [state[0]];
-  // Simulate beyond the chart window so the last DLMO has a following temperature minimum.
-  const n = 4 * SAMPLES_PER_DAY;
+  // Simulate one day past the window so the last DLMO has a following temperature minimum.
+  const n = (nights + 1) * SAMPLES_PER_DAY;
   for (let i = 1; i <= n; i++) {
     state = step(state, lightAtStep(i), tau);
     rhythm.push(state[0]);
   }
-  return dlmoByNight(rhythm, 3);
+  return dlmoByNight(rhythm, nights);
 }
 
 // Start state: 14 repeats of the first replay day, shifted by the personal offset.
@@ -109,16 +109,16 @@ export function historyDlmo(history, params = DEFAULT_PARAMS) {
 }
 
 // DLMO (minutes, same scale as compare()) for the next three nights under a schedule.
-export function forecastDlmo(state, options, params = DEFAULT_PARAMS) {
-  return simulatePhase(state, i => forecastLux(i, options), params.tau).map((value, i) => value === null ? null : value - i * DAY);
+export function forecastDlmo(state, options, params = DEFAULT_PARAMS, nights = 3) {
+  return simulatePhase(state, i => forecastLux(i, options), params.tau, nights).map((value, i) => value === null ? null : value - i * DAY);
 }
 
-export function compare(history, options, params = DEFAULT_PARAMS) {
+export function compare(history, options, params = DEFAULT_PARAMS, nights = 3) {
   if (history.length < SAMPLES_PER_DAY) return [];
   const currentDay = history.slice(-SAMPLES_PER_DAY);
   const state = estimateState(history, params);
-  const current = simulatePhase(state, i => currentDay[i % SAMPLES_PER_DAY], params.tau);
-  const preview = simulatePhase(state, i => forecastLux(i, options), params.tau);
+  const current = simulatePhase(state, i => currentDay[i % SAMPLES_PER_DAY], params.tau, nights);
+  const preview = simulatePhase(state, i => forecastLux(i, options), params.tau, nights);
   return current.map((value, i) => ({
     current: value === null ? null : value - i * DAY,
     preview: preview[i] === null ? null : preview[i] - i * DAY,

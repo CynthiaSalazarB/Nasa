@@ -1,7 +1,12 @@
-import { ANCHOR, DAY, DEFAULT_PARAMS, SAMPLES_PER_DAY, STEP, clock, compare, wrap } from './model.mjs';
+import { ANCHOR, DAY, DEFAULT_PARAMS, SAMPLES_PER_DAY, STEP, clock, compare, historyDlmo, wrap } from './model.mjs';
 import { drawPhase, drawTelemetry, drawUtmb } from './charts.mjs';
-import { explain, suggest } from './suggest.mjs';
-import { fitParams } from './fit.mjs';
+import { ALIGN_GAP, explain, suggest } from './suggest.mjs';
+import { fitParams, sleepOnsets } from './fit.mjs';
+import { CREW, generateRecord } from './crew.mjs';
+
+const FORECAST_NIGHTS = 90; // three months ahead
+const FIT_NIGHTS = 21; // personal fit uses the last three weeks of the record
+const TABLE_NIGHTS = [1, 7, 14, 30, 60, 90];
 
 const el = id => document.getElementById(id);
 const set = (id, value) => { el(id).textContent = value; };
@@ -34,7 +39,14 @@ let options = { bedtime: 1380, wake: 420, lead: 120, lux: 30, morning: 0 };
 // Sleep slot set by mission planners. Only a manual bed/wake edit changes it; Apply does not.
 let mission = { bedtime: 1380, wake: 420 };
 let suggestion = null;
+let planApplied = false; // true after Preview in forecast, until the plan is edited by hand
 let personalFit = null; // result of fitParams on the replay
+let member = CREW[0];
+let chartView = { past: [], future: [] };
+const records = new Map(); // astronaut id -> generated rows
+const fits = new Map(); // astronaut id -> fit result
+// Forecasts start from the same recent window the fit used, so the fitted offset means the same thing.
+const recentLux = () => telemetry.slice(-FIT_NIGHTS * SAMPLES_PER_DAY).map(s => s.lux);
 const activeParams = () => (personalFit && el('use-fit').checked ? personalFit.params : DEFAULT_PARAMS);
 
 function duration(minutes) {
@@ -125,12 +137,17 @@ function toggleReplay() {
 
 function renderForecast() {
   if (!telemetry.length) return;
-  forecast = compare(telemetry.map(s => s.lux), options, activeParams());
-  const rows = forecast.map((night, index) => {
+  const lux = telemetry.map(s => s.lux);
+  const params = activeParams();
+  forecast = compare(recentLux(), options, params, FORECAST_NIGHTS);
+  const onsets = sleepOnsets(telemetry.map(s => s.asleep));
+  chartView = { past: historyDlmo(lux, params).map((dlmo, i) => ({ dlmo, onset: onsets[i] })), future: forecast };
+  const rows = TABLE_NIGHTS.map(nightNumber => {
+    const night = forecast[nightNumber - 1];
     const row = document.createElement('tr');
     const shift = night.current !== null && night.preview !== null ? delta(night.preview, night.current) : NaN;
     const labels = [
-      'Night ' + (index + 1),
+      'Night ' + nightNumber,
       night.current === null ? '—' : clock(night.current),
       night.preview === null ? '—' : clock(night.preview),
       shiftLabel(shift),
@@ -141,11 +158,11 @@ function renderForecast() {
       cell.textContent = label;
       row.append(cell);
     });
-    if (index === forecast.length - 1) set('phase-delta', shiftLabel(shift));
+    if (nightNumber === FORECAST_NIGHTS) set('phase-delta', shiftLabel(shift));
     return row;
   });
   el('forecast-rows').replaceChildren(...rows);
-  drawPhase(el('phase-chart'), forecast, options.bedtime);
+  drawPhase(el('phase-chart'), chartView, options.bedtime, ALIGN_GAP);
 }
 
 function updatePlan() {
@@ -178,14 +195,15 @@ function renderFit() {
     el('use-fit').disabled = true;
     return;
   }
-  const { params, rmse, nights } = personalFit;
+  const { params, typical, unusual, nights } = personalFit;
   const offset = params.offset === 0 ? 'no start offset' : 'start offset ' + duration(Math.abs(params.offset)) + (params.offset > 0 ? ' later' : ' earlier');
-  set('fit-summary', 'Fitted on ' + nights.length + ' nights: natural day ' + params.tau.toFixed(1) + ' h (average 24.2 h), '
-    + offset + '. Predicted sleep onsets match the record within ' + Math.round(rmse) + ' min on average.');
+  set('fit-summary', 'Fitted on the last ' + nights.length + ' nights: natural day ' + params.tau.toFixed(1) + ' h (average 24.2 h), '
+    + offset + '. Predicted sleep onsets are typically ' + Math.round(typical) + ' min off'
+    + (unusual ? '; ' + unusual + ' unusual nights (for example a docking shift) ignored.' : '.'));
 }
 
 function renderSuggestion() {
-  suggestion = suggest(telemetry.map(s => s.lux), options, mission, activeParams());
+  suggestion = suggest(recentLux(), options, mission, activeParams());
   if (!suggestion) return;
   const { status, steps, outcome } = explain(suggestion, options, mission);
   set('suggestion-status', status);
@@ -195,10 +213,13 @@ function renderSuggestion() {
     return item;
   }));
   set('suggestion-outcome', outcome);
-  el('apply-suggestion').disabled = !suggestion.changes;
+  const button = el('apply-suggestion');
+  button.disabled = !suggestion.changes;
+  button.textContent = suggestion.changes ? 'Preview in forecast' : planApplied ? 'Plan applied ✓' : 'Already the best plan';
 }
 
 function applySuggestion() {
+  planApplied = true;
   if (!suggestion || !suggestion.changes) return;
   const { bedtime, wake, lead, morning } = suggestion.options;
   el('bedtime').value = clock(bedtime);
@@ -209,6 +230,7 @@ function applySuggestion() {
 }
 
 function setMissionSlot() {
+  planApplied = false;
   const bedtime = timeInput('bedtime');
   const wake = timeInput('wake');
   if (Number.isFinite(bedtime) && Number.isFinite(wake)) mission = { bedtime, wake };
@@ -259,40 +281,25 @@ function navigate() {
     el('evidence-link').removeAttribute('aria-current');
     el('console-link').setAttribute('aria-current', 'page');
     renderReplay();
-    drawPhase(el('phase-chart'), forecast, options.bedtime);
+    drawPhase(el('phase-chart'), chartView, options.bedtime, ALIGN_GAP);
   }
 }
 
 async function initialize() {
-  const [missionRows, utmbRows, phaseRows] = await Promise.all([
-    loadCsv('./data/orbital_synthetic_telemetry.csv'),
+  const [utmbRows, phaseRows] = await Promise.all([
     loadCsv('./data/utmb_c1g0001.csv'),
     loadCsv('./data/dso484_phases.csv'),
   ]);
-  telemetry = missionRows.map(row => ({
-    timestamp: row.timestamp,
-    asleep: row.sleep_state === 'asleep',
-    lux: Number(row.cabin_light_lux),
-  }));
-  if (telemetry.length !== 7 * SAMPLES_PER_DAY || telemetry.some(row => !Number.isFinite(row.lux))) {
-    throw new Error('Invalid mission replay file');
-  }
   utmb = utmbRows;
   dso = phaseRows.filter(row => row.marker === 'urinary_melatonin_sulfate');
-  sleepNights = summarizeSleep(telemetry);
-  personalFit = fitParams(telemetry.map(s => s.lux), telemetry.map(s => s.asleep));
-  renderFit();
-
-  for (let day = 0; day < 7; day++) {
+  for (const astronaut of CREW) {
     const button = document.createElement('button');
     button.type = 'button';
-    button.dataset.day = day;
-    button.textContent = 'Night ' + (day + 1);
-    button.addEventListener('click', () => {
-      stopReplay();
-      setPlayIndex((day + 1) * SAMPLES_PER_DAY - 1);
-    });
-    el('day-tabs').append(button);
+    button.dataset.id = astronaut.id;
+    button.textContent = astronaut.name;
+    button.title = astronaut.id;
+    button.addEventListener('click', () => selectAstronaut(astronaut));
+    el('crew-tabs').append(button);
   }
   for (const subject of dso) {
     el('dso-subject').add(new Option('Subject ' + subject.subject_id + ' · Protocol ' + subject.protocol, subject.subject_id));
@@ -303,7 +310,7 @@ async function initialize() {
     setPlayIndex(Number(value('scrubber')));
   });
   for (const id of ['bedtime', 'wake']) el(id).addEventListener('change', setMissionSlot);
-  for (const id of ['lead', 'dim-lux', 'morning']) el(id).addEventListener('change', updatePlan);
+  for (const id of ['lead', 'dim-lux', 'morning']) el(id).addEventListener('change', () => { planApplied = false; updatePlan(); });
   el('apply-suggestion').addEventListener('click', applySuggestion);
   el('use-fit').addEventListener('change', () => { renderForecast(); renderSuggestion(); });
   for (const button of document.querySelectorAll('[data-fixture]')) {
@@ -316,16 +323,48 @@ async function initialize() {
     const resize = new ResizeObserver(() => {
       if (el('evidence').hidden) {
         renderReplay();
-        drawPhase(el('phase-chart'), forecast, options.bedtime);
+        drawPhase(el('phase-chart'), chartView, options.bedtime, ALIGN_GAP);
       } else {
         renderUtmb();
       }
     });
     for (const id of ['telemetry-chart','phase-chart','utmb-chart']) resize.observe(el(id));
   }
+  await selectAstronaut(CREW[0]);
+  navigate();
+}
+
+// Load one astronaut's 90-day record, fit their clock (cached), and redraw everything.
+async function selectAstronaut(astronaut) {
+  stopReplay();
+  member = astronaut;
+  planApplied = false;
+  for (const button of el('crew-tabs').children) button.setAttribute('aria-pressed', button.dataset.id === member.id);
+  set('crew-eyebrow', 'FLIGHT SURGEON REVIEW / ' + member.id + ' · ' + member.name.toUpperCase());
+  if (!records.has(member.id)) records.set(member.id, generateRecord(member));
+  telemetry = records.get(member.id);
+  sleepNights = summarizeSleep(telemetry);
+  const days = telemetry.length / SAMPLES_PER_DAY;
+  el('scrubber').max = telemetry.length - 1;
+  el('day-tabs').replaceChildren(...Array.from({ length: 7 }, (_, k) => {
+    const day = days - 7 + k;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.dataset.day = day;
+    button.textContent = 'Night ' + (day + 1);
+    button.addEventListener('click', () => { stopReplay(); setPlayIndex((day + 1) * SAMPLES_PER_DAY - 1); });
+    return button;
+  }));
+  if (!fits.has(member.id)) {
+    set('fit-summary', 'Fitting ' + member.name + '’s clock to the last ' + FIT_NIGHTS + ' nights…');
+    await new Promise(resolve => setTimeout(resolve, 30)); // let the message paint before the ~1 s fit
+    const recent = telemetry.slice(-FIT_NIGHTS * SAMPLES_PER_DAY);
+    fits.set(member.id, fitParams(recent.map(s => s.lux), recent.map(s => s.asleep)));
+  }
+  personalFit = fits.get(member.id);
+  renderFit();
   setPlayIndex(telemetry.length - 1);
   updatePlan();
-  navigate();
 }
 
 initialize().catch(error => {

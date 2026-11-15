@@ -37,13 +37,22 @@ export function fitParams(history, asleep, nights) {
       const predicted = predictOnsets(history, { offset, tau });
       const errors = use.map(i => predicted[i] === null ? NaN : delta(predicted[i], observed[i]));
       if (errors.some(e => !Number.isFinite(e))) continue;
-      const sse = errors.reduce((sum, e) => sum + e * e, 0);
+      // Each night's error counts at most 2 h, so a few unusual nights (a docking shift) cannot drag the fit.
+      const sse = errors.reduce((sum, e) => sum + Math.min(e * e, OUTLIER_CAP ** 2), 0);
       if (!best || sse < best.sse) best = { params: { offset, tau }, sse, errors };
     }
   }
   if (!best) return null;
-  const rmse = Math.sqrt(best.sse / use.length);
-  return { params: best.params, rmse, nights: use, errors: best.errors };
+  const typical = median(best.errors.map(Math.abs));
+  const unusual = best.errors.filter(e => Math.abs(e) >= OUTLIER_CAP).length;
+  return { params: best.params, typical, unusual, nights: use, errors: best.errors };
+}
+
+const OUTLIER_CAP = 120;
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 // Error in minutes between predicted and observed onset for the given nights (for held-out checks).

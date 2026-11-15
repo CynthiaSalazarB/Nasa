@@ -91,37 +91,52 @@ export function drawTelemetry(canvas, samples, to, options) {
   dot(c, x(to), y(samples[to].lux), colors.amber);
 }
 
-export function drawPhase(canvas, forecast, bedtime) {
+// Six-month view: past nights (observed sleep onset + modeled DLMO) left of "Today",
+// forecast nights (DLMO with current light vs the plan) right of it.
+export function drawPhase(canvas, { past, future }, bedtime, alignGap) {
   const view = context(canvas);
-  if (!view || !forecast.length) return;
+  if (!view || !future.length) return;
   const { c, width, height } = view;
   const left = 53, right = width - 22, top = 11, base = height - 27;
-  const target = ANCHOR + wrap(bedtime - ANCHOR);
-  const times = forecast.flatMap(row => [row.current, row.preview]).filter(t => t !== null);
-  const minimum = Math.floor((Math.min(...times, target) - 15) / 60) * 60;
+  const noon = t => ANCHOR + wrap(t - ANCHOR); // keep after-midnight times continuous with the evening
+  const target = noon(bedtime), targetDlmo = noon(bedtime - alignGap);
+  const times = [...past.flatMap(n => [n.dlmo, n.onset]), ...future.flatMap(n => [n.current, n.preview])]
+    .filter(t => t !== null).map(noon);
+  const minimum = Math.floor((Math.min(...times, targetDlmo) - 15) / 60) * 60;
   const maximum = Math.ceil((Math.max(...times, target) + 15) / 60) * 60;
-  const y = time => base - (time - minimum) / (maximum - minimum) * (base - top);
-  const x = i => left + (right - left) * (i + 0.5) / 3;
+  const y = time => base - (noon(time) - minimum) / (maximum - minimum) * (base - top);
+  const span = past.length + future.length;
+  const x = night => left + (right - left) * (night + past.length + 0.5) / span; // night 0 = first forecast night
   c.textAlign = 'right';
   const spacing = Math.max(60, Math.ceil((maximum - minimum) / 240) * 60);
   for (let t = minimum; t <= maximum; t += spacing) {
-    const yy = y(t);
-    line(c, [[left,yy],[right,yy]], colors.grid);
-    c.fillText(clock(t), left - 6, yy);
+    line(c, [[left, y(t)], [right, y(t)]], colors.grid);
+    c.fillText(clock(t), left - 6, y(t));
   }
-  c.setLineDash([4, 5]); line(c, [[left,y(target)],[right,y(target)]], '#6c7d97'); c.setLineDash([]);
+  c.setLineDash([4, 5]);
+  line(c, [[left, y(target)], [right, y(target)]], '#6c7d97');
+  line(c, [[left, y(targetDlmo)], [right, y(targetDlmo)]], '#4f8f86');
+  line(c, [[x(-0.5), top], [x(-0.5), base]], colors.muted);
+  c.setLineDash([]);
   c.textAlign = 'center';
-  for (let i = 0; i < 3; i++) c.fillText('Night ' + (i + 1), x(i), height - 11);
-  for (const [key, color] of [['current',colors.amber],['preview',colors.mint]]) {
-    let previous = null;
-    forecast.forEach((row, i) => {
-      if (row[key] === null) { previous = null; return; }
-      const point = [x(i), y(row[key])];
-      if (previous) line(c, [previous, point], color, 2);
-      dot(c, ...point, color);
-      previous = point;
-    });
+  const months = Math.round(past.length / 30);
+  for (let m = -months; m <= Math.round(future.length / 30); m++) {
+    c.fillText(m === 0 ? 'Today' : (m > 0 ? '+' : '') + m + ' mo', x(m * 30 - 0.5), height - 11);
   }
+  for (let i = 0; i < past.length; i++) {
+    if (past[i].onset !== null) dot(c, x(i - past.length), y(past[i].onset), colors.violet, 1.6);
+  }
+  const series = (rows, key, offset) => rows.map((row, i) => row[key] === null ? null : [x(i + offset), y(row[key])]);
+  const path = (points, color, size) => {
+    let run = [];
+    for (const p of [...points, null]) {
+      if (p) { run.push(p); continue; }
+      line(c, run, color, size); run = [];
+    }
+  };
+  path(series(past, 'dlmo', -past.length), colors.muted, 1.5);
+  path(series(future, 'current', 0), colors.amber, 2);
+  path(series(future, 'preview', 0), colors.mint, 2);
 }
 
 export function drawUtmb(canvas, rows, metric) {
