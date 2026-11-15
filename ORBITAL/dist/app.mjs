@@ -96,11 +96,11 @@ function renderReplay() {
   const onset = latest ? wrap(ANCHOR + latest.onset * STEP) : null;
   const delay = latest ? delta(onset, options.bedtime) : null;
   set('sleep-duration', latest ? duration((latest.end - latest.onset) * STEP) : '—');
-  set('sleep-target-label', duration(targetLength) + ' scheduled');
+  set('sleep-target-label', 'of ' + duration(targetLength) + ' scheduled');
   set('sleep-onset', onset !== null ? clock(onset) : '—');
-  set('sleep-night', latest ? 'Replay night ' + latest.night : 'Awaiting completed sleep');
-  set('sleep-delay', delay === null ? '—' : delay === 0 ? 'On target' : shiftLabel(delay));
-  set('sleep-delay-label', 'Compared with ' + clock(options.bedtime) + ' target');
+  set('sleep-night', latest ? 'Night ' + latest.night + ' of the record' : 'No completed sleep yet');
+  set('sleep-delay', delay === null ? '—' : delay === 0 ? 'On time' : shiftLabel(delay));
+  set('sleep-delay-label', 'Mission bedtime ' + clock(options.bedtime));
   set('replay-time', 'Day ' + (day + 1) + ' · ' + sample.timestamp.slice(11,16));
   set('live-lux', sample.lux + ' lux');
   set('live-state', sample.asleep ? 'Asleep' : 'Awake');
@@ -174,7 +174,7 @@ function updatePlan() {
   const awake = wrap(bedtime - wake);
   const error = el('input-error');
   if (!Number.isFinite(awake) || awake <= lead + morning) {
-    error.textContent = 'Choose distinct bed and wake times with an awake window longer than the dimming lead and morning light.';
+    error.textContent = 'Bedtime and wake must differ, and the awake time must be longer than the pre-sleep and morning light periods together.';
     error.hidden = false;
     return;
   }
@@ -191,21 +191,22 @@ function updatePlan() {
 
 function renderFit() {
   if (!personalFit) {
-    set('fit-summary', 'Personal fit needs at least 2 nights with a sleep onset; using the average clock.');
+    set('fit-summary', 'Not enough nights to personalize, so the average body clock is used.');
     el('use-fit').disabled = true;
     return;
   }
   const { params, typical, unusual, nights } = personalFit;
-  const offset = params.offset === 0 ? 'no start offset' : 'start offset ' + duration(Math.abs(params.offset)) + (params.offset > 0 ? ' later' : ' earlier');
-  set('fit-summary', 'Fitted on the last ' + nights.length + ' nights: natural day ' + params.tau.toFixed(1) + ' h (average 24.2 h), '
-    + offset + '. Predicted sleep onsets are typically ' + Math.round(typical) + ' min off'
-    + (unusual ? '; ' + unusual + ' unusual nights (for example a docking shift) ignored.' : '.'));
+  const start = params.offset === 0 ? 'starts like an average clock'
+    : 'starts ' + duration(Math.abs(params.offset)) + (params.offset > 0 ? ' later' : ' earlier') + ' than average';
+  set('fit-summary', 'Personalized from the last ' + nights.length + ' nights: ' + member.name + '’s natural day is '
+    + params.tau.toFixed(1) + ' h (average person 24.2 h) and their clock ' + start + '. Predicted bedtimes are typically '
+    + Math.round(typical) + ' min off' + (unusual ? '; ' + unusual + ' unusual nights, such as the docking, were left out.' : '.'));
 }
 
 function renderSuggestion() {
   suggestion = suggest(recentLux(), options, mission, activeParams());
   if (!suggestion) return;
-  const { status, steps, outcome } = explain(suggestion, options, mission);
+  const { status, steps, outcome } = explain(suggestion, options, mission, member.name);
   set('suggestion-status', status);
   el('suggestion-steps').replaceChildren(...steps.map(text => {
     const item = document.createElement('li');
@@ -215,7 +216,7 @@ function renderSuggestion() {
   set('suggestion-outcome', outcome);
   const button = el('apply-suggestion');
   button.disabled = !suggestion.changes;
-  button.textContent = suggestion.changes ? 'Preview in forecast' : planApplied ? 'Plan applied ✓' : 'Already the best plan';
+  button.textContent = suggestion.changes ? 'Apply plan' : planApplied ? 'Plan applied ✓' : 'Already the best plan';
 }
 
 function applySuggestion() {
@@ -356,7 +357,7 @@ async function selectAstronaut(astronaut) {
     return button;
   }));
   if (!fits.has(member.id)) {
-    set('fit-summary', 'Fitting ' + member.name + '’s clock to the last ' + FIT_NIGHTS + ' nights…');
+    set('fit-summary', 'Personalizing to ' + member.name + '’s last ' + FIT_NIGHTS + ' nights…');
     await new Promise(resolve => setTimeout(resolve, 30)); // let the message paint before the ~1 s fit
     const recent = telemetry.slice(-FIT_NIGHTS * SAMPLES_PER_DAY);
     fits.set(member.id, fitParams(recent.map(s => s.lux), recent.map(s => s.asleep)));

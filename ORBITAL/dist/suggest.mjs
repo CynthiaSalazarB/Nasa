@@ -52,25 +52,27 @@ function offsetLabel(minutes) {
 }
 
 // Plain-language summary and steps for the suggestion card.
-export function explain(result, plan, mission = plan) {
+export function explain(result, plan, mission = plan, name = 'This astronaut') {
   const { options, currentError, shift } = result;
+  const bed = clock(mission.bedtime);
   const status = Math.abs(currentError) <= ALIGNED_WITHIN
-    ? 'Your clock is on schedule for the ' + clock(mission.bedtime) + ' mission bedtime.'
-    : 'With your current light, your clock runs ' + offsetLabel(currentError) + (currentError > 0 ? ' late' : ' early') + ' for the ' + clock(mission.bedtime) + ' mission bedtime.';
-  if (!result.changes) return { status, steps: ['Keep the plan in the lighting preview. It is already the best option found.'], outcome: outcomeText(result) };
+    ? name + '’s body clock is on schedule for the ' + bed + ' bedtime.'
+    : 'If nothing changes, ' + name + '’s body clock runs ' + offsetLabel(currentError) + (currentError > 0 ? ' late' : ' early') + ' for the ' + bed + ' bedtime.';
+  if (!result.changes) return { status, steps: ['Send the lighting plan below as it is. No better option was found within the allowed changes.'], outcome: outcomeText(result) };
   const steps = [];
-  if (options.bedtime !== plan.bedtime) steps.push('Sleep ' + clock(options.bedtime) + ' to ' + clock(options.wake) + (shift
-    ? ' (' + offsetLabel(shift) + (shift > 0 ? ' later' : ' earlier') + ' than the mission slot, within the 1 h allowed).'
+  if (options.bedtime !== plan.bedtime) steps.push('Sleep from ' + clock(options.bedtime) + ' to ' + clock(options.wake) + (shift
+    ? ' (' + offsetLabel(shift) + (shift > 0 ? ' later' : ' earlier') + ' than the mission slot; 1 h is the most allowed).'
     : ' (the mission slot).'));
-  if (options.lead !== plan.lead) steps.push('Switch to Pre-sleep light at ' + clock(options.bedtime - options.lead) + ' (' + offsetLabel(options.lead) + ' before bed).');
+  if (options.lead !== plan.lead) steps.push('Dim the crew-quarters light to Pre-sleep at ' + clock(options.bedtime - options.lead) + ' (' + offsetLabel(options.lead) + ' before bed).');
   if (options.morning !== (plan.morning || 0)) steps.push(options.morning
-    ? 'Use Alertness light for ' + options.morning + ' min after waking at ' + clock(options.wake) + '.'
-    : 'Skip the morning Alertness light.');
+    ? 'Turn on bright Alertness light for ' + options.morning + ' min after waking at ' + clock(options.wake) + '.'
+    : 'Stop the morning Alertness light.');
   return { status, steps, outcome: outcomeText(result) };
 }
 
-function outcomeText({ dlmo, error }) {
-  return 'Night ' + SCORE_NIGHT + ': melatonin onset ' + clock(dlmo) + ', ' + (Math.abs(error) <= ALIGNED_WITHIN
-    ? 'on target (within ' + ALIGNED_WITHIN + ' min).'
-    : offsetLabel(error) + (error > 0 ? ' late.' : ' early.'));
+function outcomeText({ dlmo, error, options }) {
+  const goal = clock(options.bedtime - ALIGN_GAP);
+  return 'Expected by night ' + SCORE_NIGHT + ': melatonin starts at ' + clock(dlmo) + ', ' + (Math.abs(error) <= ALIGNED_WITHIN
+    ? 'on target (goal ' + goal + ', within ' + ALIGNED_WITHIN + ' min).'
+    : offsetLabel(error) + (error > 0 ? ' later' : ' earlier') + ' than the ' + goal + ' goal. This is the closest the allowed changes get.');
 }
