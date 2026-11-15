@@ -1,0 +1,28 @@
+{
+  "subject": "P1044",
+  "step1_predicted_dlmo": "19:44",
+  "step1_estimated_melatonin_peak": "00:44",
+  "step2_good_night": {
+    "date": "2016-11-12",
+    "sleep_h": 8.2,
+    "efficiency": 0.75
+  },
+  "step2_bad_night": {
+    "date": "2016-11-20",
+    "sleep_h": 4.1,
+    "efficiency": 0.83
+  },
+  "step3_final_dlmo": {
+    "Earth": "19:44",
+    "ISS cabin": "19:34",
+    "NEEMO habitat": "22:42",
+    "NEEMO + personal sun": "21:26"
+  },
+  "step3_shift_vs_earth_hours": {
+    "Earth": 0.0,
+    "ISS cabin": -0.16,
+    "NEEMO habitat": 2.97,
+    "NEEMO + personal sun": 1.7
+  },
+  "nights": 14
+}

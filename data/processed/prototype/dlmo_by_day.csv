@@ -1,0 +1,53 @@
+scenario,evening_of,dlmo_hours
+Earth,2016-11-09,20.0
+Earth,2016-11-10,19.3
+Earth,2016-11-11,19.43
+Earth,2016-11-12,19.87
+Earth,2016-11-13,20.22
+Earth,2016-11-14,19.68
+Earth,2016-11-15,19.83
+Earth,2016-11-16,19.85
+Earth,2016-11-17,19.32
+Earth,2016-11-18,19.62
+Earth,2016-11-19,19.28
+Earth,2016-11-20,19.47
+Earth,2016-11-21,19.73
+ISS cabin,2016-11-09,20.28
+ISS cabin,2016-11-10,20.13
+ISS cabin,2016-11-11,20.17
+ISS cabin,2016-11-12,19.9
+ISS cabin,2016-11-13,20.2
+ISS cabin,2016-11-14,19.67
+ISS cabin,2016-11-15,19.85
+ISS cabin,2016-11-16,19.92
+ISS cabin,2016-11-17,19.75
+ISS cabin,2016-11-18,19.73
+ISS cabin,2016-11-19,19.5
+ISS cabin,2016-11-20,19.45
+ISS cabin,2016-11-21,19.57
+NEEMO habitat,2016-11-09,21.18
+NEEMO habitat,2016-11-10,21.18
+NEEMO habitat,2016-11-11,21.3
+NEEMO habitat,2016-11-12,21.55
+NEEMO habitat,2016-11-13,21.83
+NEEMO habitat,2016-11-14,21.93
+NEEMO habitat,2016-11-15,22.05
+NEEMO habitat,2016-11-16,22.4
+NEEMO habitat,2016-11-17,22.47
+NEEMO habitat,2016-11-18,22.57
+NEEMO habitat,2016-11-19,22.65
+NEEMO habitat,2016-11-20,22.7
+NEEMO habitat,2016-11-21,22.7
+NEEMO + personal sun,2016-11-09,20.97
+NEEMO + personal sun,2016-11-10,20.23
+NEEMO + personal sun,2016-11-11,20.47
+NEEMO + personal sun,2016-11-12,21.17
+NEEMO + personal sun,2016-11-13,21.38
+NEEMO + personal sun,2016-11-14,21.55
+NEEMO + personal sun,2016-11-15,21.47
+NEEMO + personal sun,2016-11-16,21.42
+NEEMO + personal sun,2016-11-17,20.95
+NEEMO + personal sun,2016-11-18,21.5
+NEEMO + personal sun,2016-11-19,21.88
+NEEMO + personal sun,2016-11-20,21.63
+NEEMO + personal sun,2016-11-21,21.43
