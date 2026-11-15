@@ -1,83 +1,83 @@
-# Data flow: phases, loop and why each dataset
+# Data flow: ORBITAL (sleep)
 
-How the data moves through the circadian copilot, and why we use each dataset. Read this before building.
-Scope and decisions live in [PLAN.md](PLAN.md).
+How data moves through ORBITAL and why each dataset is used. Read this before building.
+Scope: [PLAN.md](PLAN.md). Components, formats and formulas: [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md).
 
-## The key idea: real product vs our demo
+## The key idea: real mission vs our demo
 
-A real astronaut produces data in 3 phases. We do not have real astronaut data (NASA keeps it behind data
-requests), so every real data stream has a **stand-in** in our demo.
+A real astronaut produces sleep and light data before, during and after a mission. That data is not public, so
+every real stream has a **stand-in** in ORBITAL.
 
 ```mermaid
 flowchart LR
-  A["Pre-launch<br/>build the profile"] --> B["In flight<br/>daily loop"] --> C["Post-flight<br/>re-adapt, archive"]
+  A["Pre-launch<br/>learn the usual sleep"] --> B["In flight<br/>nightly loop"] --> C["Post-flight<br/>re-adapt, archive"]
 ```
 
-| Phase | Real mission data | Our demo stand-in |
+| Phase | Real mission | ORBITAL demo |
 |---|---|---|
-| Pre-launch | Actiwatch weeks, chronotype questionnaire (MEQ), saliva melatonin/cortisol, baseline reaction test | MMASH baseline profiles |
-| In flight | Actiwatch (sleep, light, activity), crew timeline, cabin sensors, check-ins | Synthetic wristband data shaped by NASA numbers, synthetic ISS timeline, **real OSDR cabin data**, check-ins clicked in the demo |
-| Post-flight | Re-adaptation to Earth, data into NASA's archive | Not built, one pitch slide |
+| Pre-launch | weeks of Actiwatch data, habitual bed and wake times | the first nights of a replay, used to fit the personal clock offset |
+| In flight | nightly Actiwatch data, mission sleep slot, crew-quarters light | replay nights, suggested schedule, morning check-in, shift planner |
+| Post-flight | re-adaptation to Earth, data into NASA's archive | not built, one pitch slide |
 
-## Phase 1: Pre-launch (training, weeks before flight)
+## Phase 1: Pre-launch
 
-**Goal:** know the person before space scrambles their clock. This solves the cold start: on day 1 in orbit the app
-already knows them.
+**Goal:** learn when this person's body clock normally runs before space changes it. On night 1 in orbit, ORBITAL
+already knows if they are an early or late sleeper.
 
-**Learns:** chronotype (morning or night person), usual sleep timing and sleep need, baseline melatonin and cortisol,
-normal reaction-test speed.
+**In the demo:** ORBITAL takes the first nights of a replay (nights 1 to 5) and fits a **personal offset**: how
+many minutes their clock runs early or late compared with the default model.
 
-**Why MMASH:** it is the only open dataset with all of these for the same people: chronotype, sleep, activity,
-heart rate, saliva melatonin and cortisol. Each of its 22 people becomes one synthetic astronaut's training phase.
+## Phase 2: In flight (the core)
 
-## Phase 2: In flight (the core, what we build)
-
-A loop that runs every day, plus moments during the day ("I feel groggy").
+A loop that runs every night.
 
 ```mermaid
 flowchart TD
-  W["1. Wristband overnight<br/>sleep, light, activity"] --> M["2. Body-clock model<br/>updates clock position"]
-  M --> P["3. Prediction<br/>alertness next 24 h on the timeline"]
-  P --> E["4. Engine<br/>2 to 4 actions, unsafe ones removed"]
-  E --> F["5. Check-in feedback<br/>better / same / worse + reaction test"]
-  F --> L["6. Learner<br/>which actions work for this person"]
-  L --> E
+  W["1. Night record<br/>sleep and light, 5-min steps"] --> M["2. Body-clock model<br/>Forger99, melatonin onset"]
+  M --> A["3. Alignment<br/>clock vs mission bedtime"]
+  A --> S["4. Suggested schedule<br/>bedtime, wake, dimming, morning light"]
+  S --> F["5. Morning check-in<br/>sleep quality, did the plan help?"]
+  F --> S
 ```
 
-1. **Wristband overnight** records sleep, light and activity.
-2. **Body-clock model** ([arcascope/circadian](https://github.com/Arcascope/circadian)) updates where this person's clock is.
-3. **Prediction:** sleep pressure + clock position give the alertness curve for the next 24 h, laid over the timeline.
-4. **Engine** picks 2 to 4 actions (light mode, nap, caffeine cut-off, movement, sleep window) aimed at critical tasks,
-   and removes anything unsafe (breaks the timeline, nap ending under 30 min before a critical task, meds, food).
-5. **Feedback** at the check-in: 1 tap, optional reason, reaction test when already scheduled.
-6. **Learner** updates which actions it trusts for this person. Next day, repeat.
+1. **Night record:** sleep state and light (lux) every 5 minutes, from a replay file.
+2. **Body-clock model:** Forger99 (browser port of arcascope/circadian) turns the light history into the estimated
+   melatonin onset (DLMO), the body's "night starts" signal.
+3. **Alignment:** compares DLMO with the mission bedtime. Aligned means DLMO about 2 h before bedtime.
+4. **Suggested schedule:** ORBITAL tries bedtime and wake times inside the mission sleep slot, how early the lights
+   dim, and morning Alertness light, then proposes the plan that brings the clock back in line within 3 nights.
+   Before a known shift (a docking), the shift planner spreads the change over several nights.
+5. **Morning check-in:** sleep quality, sleepiness and "did the plan help?". The next suggestion takes the answer
+   into account. After 3 nights under 6 h of sleep, ORBITAL shows "talk to the flight surgeon".
 
-**Why each dataset here**
+## Why each dataset
 
 | Data | Why |
 |---|---|
-| Synthetic wristband data | Real astronaut wristband data is not public. We generate it in the Actiwatch shape and calibrate it with NASA numbers: Barger 2014 (about 6 to 6.5 h sleep, low light levels), ISS schedule (GMT, 8.5 h sleep slot), a docking shift. Realistic, not invented. |
-| OSDR cabin data (real NASA) | Real ISS CO2, temperature, humidity. NASA's sleep risk graph lists the environment as a cause of bad sleep, so the app flags it. Our strongest NASA data point. |
-| Fitbit, Walch | Make the synthetic nights look like real wearable nights: night-to-night variation, heart rate during sleep. |
-| Jones 2022, Xiang 2024 | How much reaction time drops after short sleep, so synthetic reaction tests behave like real ones. |
-| NASA sleep risk graph (DAG) | The list of causes and effects the engine follows. |
-| SSLA lighting spec | The 3 real light modes the app switches: General 4500K, Pre-sleep 2700K, Alertness 6500K. |
+| **ORBITAL synthetic replay** (AST-01, 7 nights) | A controlled story for the demo: bedtime drifts later and the plan has to fix it. Generated by `ORBITAL/generate_mission_telemetry.py`. |
+| **Actiwatch partner files** (Angelova et al. 2021, `data/`) | Real per-minute wrist light and sleep/wake from the same Actiwatch family NASA crews wear. They make replays real and let us test the prediction on nights the model has not seen. |
+| **UTMB bed-rest actigraphy** (NASA) | Real NASA sleep numbers (duration, time to fall asleep, efficiency) as the reference range on screen. |
+| **NASA DSO 484** | NASA evidence that shifting sleep with bright light moves the clock (melatonin peaks before and after). It backs the whole idea and is a sanity check for the model. |
+| **ISS crew-quarters lighting guidance** (NASA) | The real fixture modes and the 2 h default pre-sleep dimming that ORBITAL compares against. |
+| **`data/light.txt`** (SSLA report, NASA) | Approximate lux for each light setting, so the model gets realistic light instead of illustrative values. |
+| **OSDR cabin data** (NASA, optional) | Cabin temperature and CO2, which can disturb sleep. A context note, not a model input. |
+
+Not used anymore after the sleep pivot: MMASH, Fitbit, Walch, Sleep-EDF, reaction-test data.
 
 ## Phase 3: Post-flight
 
-**Real world:** the astronaut re-adapts to Earth's 24 h day; their data goes to NASA's archive, where NASA could one day
-train a model across all astronauts.
+**Real world:** the astronaut re-adapts to Earth's 24 h day; their data goes to NASA's archive, where a model across
+many astronauts could one day be trained.
 
-**For us:** one pitch slide. It is the "we are not training the model, but this is where the training would happen" story.
+**For us:** one pitch slide: "ORBITAL personalizes from each astronaut's own record today; NASA's archive is where a
+population model would come next."
 
 ## What to build first
 
-Everything wraps one core function:
+Everything wraps one function:
 
-> **Input:** one astronaut's last few days of sleep and light.
-> **Output:** tomorrow's alertness curve + the best action before the next critical task.
+> **Input:** one astronaut's replay (sleep + light).
+> **Output:** their clock offset, tonight's alignment, and the suggested schedule with its 3-night forecast.
 
-Build it for one synthetic astronaut first. Then:
-- the screens display it,
-- the feedback tunes it,
-- the simulation runs it for 22 astronauts to produce the numbers.
+Build it on AST-01 first, then run it on one real Actiwatch file. The screens show it, the check-in tunes it, and
+the results scripts run it over all partner files.
