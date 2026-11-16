@@ -1,5 +1,7 @@
 # Plan: NASA Space Apps 2026, team "NASA Gals +1", ORBITAL (sleep)
 
+> Written during the hackathon (Nov 14-15, 2026) to plan the build. Some parts were not built and some changed (the app is now called AstroWatch, has 8 astronauts and a 3-month forecast). The [main README](../../README.md) describes what exists.
+
 ## Context
 Challenge: "Create Health Monitoring Software for Astronauts on Space Missions". Team of 5. On Nov 15 the team
 pivoted from a broad circadian copilot to **sleep only**, built on **ORBITAL**, the prototype Nora started in
