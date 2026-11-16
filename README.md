@@ -6,7 +6,7 @@ Built in 48 hours for the NASA Space Apps Challenge 2026, challenge "Create Heal
 
 ![AstroWatch dashboard showing the recommended plan for one astronaut and a six-month body-clock view](docs/screenshot.png)
 
-**Live demo:** https://cynthiasalazarb.github.io/Nasa/
+**Live demo:** https://cynthiasalazarb.github.io/astrowatch/
 
 ## The problem
 
