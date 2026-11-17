@@ -1,6 +1,6 @@
-# AstroWatch app
+# ORBITAL app
 
-The AstroWatch dashboard. The folder keeps the prototype's original name, ORBITAL. Project overview, data sources and
+The ORBITAL dashboard. Project overview, data sources and
 license are in the [main README](../README.md).
 
 ## Run

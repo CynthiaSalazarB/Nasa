@@ -3,15 +3,15 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="AstroWatch helps flight surgeons keep each astronaut's body clock in sync with the mission sleep schedule.">
+  <meta name="description" content="ORBITAL helps flight surgeons keep each astronaut's body clock in sync with the mission sleep schedule.">
   <meta name="theme-color" content="#0b1020">
-  <title>AstroWatch · Mission sleep console</title>
+  <title>ORBITAL · Mission sleep console</title>
   <link rel="stylesheet" href="./style.css">
   <script type="module" src="./app.mjs"></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="#console" aria-label="AstroWatch mission console"><span class="brand-mark" aria-hidden="true"></span>ASTROWATCH</a>
+    <a class="brand" href="#console" aria-label="ORBITAL mission console"><span class="brand-mark" aria-hidden="true"></span>ORBITAL</a>
     <nav aria-label="Workspace">
       <a href="#console" id="console-link" aria-current="page">Mission console</a>
       <a href="#evidence" id="evidence-link">Research data</a>
@@ -89,7 +89,7 @@
       </div>
     </section>
     <section id="evidence" hidden>
-      <div class="hero"><div><div class="eyebrow">SOURCE DATA</div><h1>Research behind AstroWatch</h1><p>Explore the measured sleep and circadian observations behind the simulation.</p></div></div>
+      <div class="hero"><div><div class="eyebrow">SOURCE DATA</div><h1>Research behind ORBITAL</h1><p>Explore the measured sleep and circadian observations behind the simulation.</p></div></div>
       <div class="evidence-grid">
         <section class="panel">
           <div class="panel-heading"><div><h2>UTMB actigraphy</h2><p>Ground-based bed-rest study · C1G0001 · 69 dated observations</p></div></div>
@@ -108,7 +108,7 @@
           <div class="peak-grid"><div><span>Before hormone peak</span><strong id="dso-before">—</strong></div><div><span>After hormone peak</span><strong id="dso-after">—</strong></div></div>
           <div class="evidence-metric"><strong id="dso-delay">—</strong><span>Reported phase delay · urinary melatonin sulfate</span></div>
           <div class="study-summary"><strong>10.7 h</strong><p>Median reported delay across all eight astronauts (3.2–15.6 h). The protocol combined bright light and sleep shifting.</p></div>
-          <p class="note">This study measured hormone peak times. AstroWatch’s modeled DLMO corresponds to melatonin onset.</p>
+          <p class="note">This study measured hormone peak times. ORBITAL’s modeled DLMO corresponds to melatonin onset.</p>
           <a class="text-link" href="https://nlsp.nasa.gov/search/data/details/1bb44ffb-b00d-521a-bbeb-d8fcd036ad83?dataType=EXPERIMENTS" target="_blank" rel="noopener">NASA experiment ↗</a>
         </section>
       </div>
@@ -119,6 +119,6 @@
     </section>
     <p id="startup-error" class="error" hidden role="alert"></p>
   </main>
-  <footer><span>AstroWatch</span><span>Hackathon prototype · mission telemetry and forecasts are simulated</span></footer>
+  <footer><span>ORBITAL</span><span>Hackathon prototype · mission telemetry and forecasts are simulated</span></footer>
 </body>
 </html>

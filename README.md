@@ -1,12 +1,12 @@
-# AstroWatch
+# ORBITAL
 
 A sleep and body-clock dashboard for flight surgeons. It reads an astronaut's sleep and light record, estimates where their body clock is, and recommends a lighting and sleep plan that brings it back in sync with the mission schedule.
 
 Built in 48 hours for the NASA Space Apps Challenge 2026, challenge "Create Health Monitoring Software for Astronauts on Space Missions".
 
-![AstroWatch dashboard showing the recommended plan for one astronaut and a six-month body-clock view](docs/screenshot.png)
+![ORBITAL dashboard showing the recommended plan for one astronaut and a six-month body-clock view](docs/screenshot.png)
 
-**Live demo:** https://cynthiasalazarb.github.io/astrowatch/
+**Live demo:** https://cynthiasalazarb.github.io/Nasa/
 
 ## The problem
 
@@ -60,7 +60,7 @@ The astronauts and their records are fictional. Results are model estimates, not
 ## Repo layout
 
 ```
-ORBITAL/     the app (the folder kept its original name): dist/ is the site
+ORBITAL/     the app: dist/ is the site
 docs/        screenshot; archive/ holds the plan and design written during the hackathon
 data/        light values from NASA reports, real actigraphy recordings (see data/README.md)
 ```

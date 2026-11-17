@@ -1,6 +1,6 @@
 # Data flow: ORBITAL (sleep)
 
-> Written during the hackathon (Nov 14-15, 2026) to plan the build. Some parts were not built and some changed (the app is now called AstroWatch, has 8 astronauts and a 3-month forecast). The [main README](../../README.md) describes what exists.
+> Written during the hackathon (Nov 14-15, 2026) to plan the build. Some parts were not built and some changed (the app now has 8 astronauts and a 3-month forecast). The [main README](../../README.md) describes what exists.
 
 How data moves through ORBITAL and why each dataset is used. Read this before building.
 Scope: [PLAN.md](PLAN.md). Components, formats and formulas: [SYSTEM_DESIGN.md](SYSTEM_DESIGN.md).

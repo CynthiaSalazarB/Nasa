@@ -1,6 +1,6 @@
 # System design: ORBITAL (sleep)
 
-> Written during the hackathon (Nov 14-15, 2026) to plan the build. Some parts were not built and some changed (the app is now called AstroWatch, has 8 astronauts and a 3-month forecast). The [main README](../../README.md) describes what exists.
+> Written during the hackathon (Nov 14-15, 2026) to plan the build. Some parts were not built and some changed (the app now has 8 astronauts and a 3-month forecast). The [main README](../../README.md) describes what exists.
 
 How ORBITAL is built and what we add to it. Scope and decisions: [PLAN.md](PLAN.md).
 The app lives in `ORBITAL/` in this repo (moved from nora-raad/nasa_hackathon with history); paths below are
